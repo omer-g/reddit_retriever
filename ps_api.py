@@ -17,6 +17,9 @@ EXTRA_DAYS_FOR_COMMENTS = 7
 # Change to True to also create a csv file
 CREATE_CSV = False
 
+# Comments sorted by field: "created_utc" or "score"
+COMMENTS_SORT = "score"
+
 # OPTIONAL query string (only searches submissions)
 QUERY = None
 
@@ -110,7 +113,9 @@ if __name__=="__main__":
         submission_id = submission["id"]
         submission_comments = [obj.d_ for obj in full_comments
                                if submission_id in obj.d_["link_id"]]
-        submission_comments.sort(key=lambda k: k['created_utc'])
+        submission_comments.sort(key=lambda k: k[COMMENTS_SORT])
+        if COMMENTS_SORT == "score":
+            submission_comments.reverse()
         stack = [comment for comment in submission_comments if
                  submission_id in comment["parent_id"]]
         while stack:
