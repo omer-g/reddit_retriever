@@ -111,17 +111,21 @@ if __name__=="__main__":
         submission_comments = [obj.d_ for obj in full_comments
                                if submission_id in obj.d_["link_id"]]
         submission_comments.sort(key=lambda k: k['created_utc'])
-        for i in range(len(submission_comments)):
-            submission_comments[i]["type"] = "comment"
-            link_id = submission_comments[i]["link_id"]
-            submission_comments[i]["link_id"] = full_name_to_id(link_id)
-            
-            # In case API returns fullname
-            comment_id = submission_comments[i]["id"]
-            submission_comments[i]["id"] = full_name_to_id(comment_id)
-            submission_comments[i]["full_link"] = submission["full_link"] + comment_id
-            epoch = submission_comments[i]["created_utc"]
-            submission_comments[i]["date_posted"] = get_date(epoch)   
-            submission_comments[i]["title"] = submission["title"]
-        result += submission_comments
+        stack = [comment for comment in submission_comments if
+                 submission_id in comment["parent_id"]]
+        while stack:
+            parent_comment = stack.pop(0)
+            parent_comment["type"] = "comment"
+            parent_id = full_name_to_id(parent_comment["id"])
+
+            parent_comment["link_id"] = full_name_to_id(parent_comment["link_id"])
+            parent_comment["full_link"] = submission["full_link"] + parent_id
+            epoch = parent_comment["created_utc"]
+            parent_comment["date_posted"] = get_date(epoch)
+            parent_comment["title"] = submission["title"]
+            result.append(parent_comment)
+
+            sons = [comment for comment in submission_comments
+                    if parent_id in comment["parent_id"]]
+            stack = sons + stack
     generate_excel(result, create_csv=CREATE_CSV)
