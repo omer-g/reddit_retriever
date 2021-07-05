@@ -5,7 +5,7 @@ import pandas
 from psaw import PushshiftAPI
 
 
-SUBREDDIT = "progun"
+SUBREDDIT = "worldnews"
 
 # Date in ISO format "YYYY-MM-DD" (ex: "2016-06-12")
 START_DATE = "2016-06-12"
