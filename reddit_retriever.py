@@ -5,14 +5,16 @@ import pandas
 from psaw import PushshiftAPI
 
 
-SUBREDDIT = "worldnews"
+################## START PARAMETERS ##################
+
+SUBREDDIT = "history"
 
 # Date in ISO format "YYYY-MM-DD" (ex: "2016-06-12")
 START_DATE = "2016-06-12"
-END_DATE = "2016-06-14"
+END_DATE = "2016-06-15"
 
 # Number of days after end date to request comments
-EXTRA_DAYS_FOR_COMMENTS = 7
+EXTRA_DAYS_FOR_COMMENTS = 4
 
 # Change to True to also create a csv file
 CREATE_CSV = False
@@ -20,8 +22,13 @@ CREATE_CSV = False
 # Comments sorted by field: "created_utc" or "score"
 COMMENTS_SORT = "score"
 
+# Maximum number of comments in a submission (None for no maximum)
+MAX_COMMENTS = None
+
 # OPTIONAL query string (only searches submissions)
 QUERY = None
+
+################### END PARAMETERS ###################
 
 
 def date_to_epoch(date_iso, delta_days = None):
@@ -101,7 +108,7 @@ if __name__=="__main__":
     full_submissions = list(pushshift_api.search_submissions(**kargs_submission))
     full_submissions.sort(key=lambda k: k.d_['created_utc'])
     submissions = [submission.d_ for submission in full_submissions]
-
+    print(f"Number of submissions: {len(submissions)}")
     result = []
     for submission in submissions:
         submission["type"] = "submission"
@@ -118,6 +125,8 @@ if __name__=="__main__":
             submission_comments.reverse()
         stack = [comment for comment in submission_comments if
                  submission_id in comment["parent_id"]]
+        
+        comment_num = 0
         while stack:
             parent_comment = stack.pop(0)
             parent_comment["type"] = "comment"
@@ -133,4 +142,10 @@ if __name__=="__main__":
             sons = [comment for comment in submission_comments
                     if parent_id in comment["parent_id"]]
             stack = sons + stack
+
+            if MAX_COMMENTS:
+                comment_num += 1
+                if comment_num >= MAX_COMMENTS:
+                    break
+
     generate_excel(result, create_csv=CREATE_CSV)
